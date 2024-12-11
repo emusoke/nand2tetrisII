@@ -96,23 +96,6 @@ std::string CodeWriter::negAssembly()
 }
 
 
-// @SP
-// M=M-1 // 0 is 257
-// A=M // a is 257
-// D=M // D is value on top of stack
-// // place this value in a variable
-// @placeholder
-// M=D // put d in placeholder
-// @SP // go back to stack
-// M=M-1 // get the next value
-// A=M
-// D=M // D now holds the value on the stack
-// @placeholder
-// D=D&M // D now holds the value of the 2 and values
-// @SP
-// A=M
-// M=D // put D on the value of the stack
-
 std::string CodeWriter::andAssembly()
 {
     string assembly = "// and \n";

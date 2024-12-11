@@ -5,6 +5,6 @@
 
 // Pushes and adds two constants.
 
-push constant 90
-push constant 10
+push constant 7
+push constant 8
 add

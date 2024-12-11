@@ -14,8 +14,8 @@ using namespace C;
 
 int main(){
     Command x;
-    Parser p = Parser("static.vm");
-    CodeWriter c("static.asm");
+    Parser p = Parser("pointer.vm");
+    CodeWriter c("python_pointer.asm");
 
     bool step = true;
     while(step)
