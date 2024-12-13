@@ -314,6 +314,97 @@ class CodeWriter:
             + "0;JMP\n"
         )
 
+    def _function_assembly(self, arg1, arg2):
+        push_assembly = ""
+        for i in range(int(arg2)):
+            push_assembly += f"push local {i}\n"
+        return (
+            f"// function {arg1}\n"
+            + f"({arg1})\n"
+            + push_assembly
+        )
+
+    def _return_assembly(self):
+        return (
+            "// return \n"
+            + "@LCL\n"  # endFrame = LCL
+            + "D=M\n"
+            + "@endFrame\n"
+            + "M=D\n"
+
+            + "// retAddr = *(endFrame - 5)\n"
+            + "@5\n"  # retAddr = *(endFrame - 5)
+            + "D=A\n"
+            + "@endFrame\n"
+            + "D=A-D\n"
+            + "@retAddr\n"
+            + "M=D\n"
+
+            # pop assembly
+            + "// *ARG = pop()\n"
+            + "@0"
+            + "\n"
+            + "D=A\n"
+            + "@ARG"
+            + "D=D+M\n"
+            + "@target\n"
+            + "M=D\n"
+            + "@SP\n"
+            + "M=M-1\n"
+            + "A=M\n"
+            + "D=M\n"
+            + "@target\n"
+            + "A=M\n"
+            + "M=D\n"
+
+            "// SP = ARG + 1\n"
+            + "@ARG\n"
+            + "D=A\n"
+            + "@SP\n"
+            + "M=D+1\n"
+
+            + "// THAT = *(endFrame - 1)\n"
+            + "@endFrame\n"
+            + "A=A-1\n"
+            + "D=A\n"
+            + "@THAT\n"
+            + "M=D\n"
+
+            + "// THIS = *(endFrame - 2)\n"
+            + "@2\n"
+            + "D=A\n"
+            + "@endframe\n"
+            + "A=A-D\n"
+            + "D=A\n"
+            + "@THIS\n"
+            + "M=D\n"
+
+
+            + "// ARG = *(endFrame - 3)\n"
+            + "@3\n"
+            + "D=A\n"
+            + "@endframe\n"
+            + "A=A-D\n"
+            + "D=A\n"
+            + "@ARG\n"
+            + "M=D\n"
+
+
+            + "// LCL = *(endFrame - 4)\n"
+            + "@4\n"
+            + "D=A\n"
+            + "@endframe\n"
+            + "A=A-D\n"
+            + "D=A\n"
+            + "@LCL\n"
+            + "M=D\n"
+
+            + "// goto retAddr\n"
+            + "@retAddr\n"
+            + "A=M\n"
+            + "0;JMP\n"
+        )
+
     def _if_goto_assembly(self, arg1):
         return (
             "// if-goto " + arg1 + "\n"
@@ -389,6 +480,12 @@ class CodeWriter:
 
     def write_if_goto_assembly(self, arg1):
         self.file.write(self._if_goto_assembly(arg1))
+
+    def write_function_assembly(self, arg1, arg2):
+        self.file.write(self._function_assembly(arg1, arg2))
+
+    def write_return_assembly(self):
+        self.file.write(self._return_assembly())
 
     def close(self):
         self.file.close()

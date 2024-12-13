@@ -33,4 +33,10 @@ if __name__ == "__main__":
         elif p.command_type == CommandType.IF:
             c.write_if_goto_assembly(p.arg1)
 
+        elif p.command_type == CommandType.FUNCTION:
+            c.write_function_assembly(p.arg1, p.arg2)
+
+        elif p.command_type == CommandType.RETURN:
+            c.write_return_assembly()
+
     c.close()
