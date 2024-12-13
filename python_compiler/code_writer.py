@@ -121,6 +121,9 @@ class CodeWriter:
                 + "M=M+1\n"
             )
 
+        def label_assembly(self, arg1):
+            return f"label {arg1}"
+
         def _eq_assembly(self):
             return (
                 "// eq \n"
@@ -301,6 +304,27 @@ class CodeWriter:
                 + "M=M+1\n"
             )
 
+    def _label_assembly(self, arg1):
+        return f"({arg1})\n"
+
+    def _goto_assembly(self, arg1):
+        return (
+            f"// go to {arg1}\n"
+            + f"@{arg1}\n"
+            + "0;JMP\n"
+        )
+
+    def _if_goto_assembly(self, arg1):
+        return (
+            "// if-goto " + arg1 + "\n"
+            "@SP\n"
+            + "M=M-1\n"
+            + "A=M\n"
+            + "D=M\n"
+            + f"@{arg1}\n"
+            + "D;JGT\n"
+        )
+
     def write_pop_assembly(self, segment, arg):
         assembly = "// pop " + segment + " " + arg + "\n"
         target_address = "D=D+M\n"
@@ -356,6 +380,15 @@ class CodeWriter:
             self.file.write(self.write_push_assembly(arg1, arg2))
         else:
             self.file.write(self.write_pop_assembly(arg1, arg2))
+
+    def write_label_assembly(self, arg1):
+        self.file.write(self._label_assembly(arg1))
+
+    def write_goto_assembly(self, arg1):
+        self.file.write(self._goto_assembly(arg1))
+
+    def write_if_goto_assembly(self, arg1):
+        self.file.write(self._if_goto_assembly(arg1))
 
     def close(self):
         self.file.close()

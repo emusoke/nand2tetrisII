@@ -61,11 +61,3 @@ class Parser:
     @property
     def arg2(self):
         return self.current_command.split()[2]
-
-
-# for testing purposes
-if __name__ == "__main__":
-    p = Parser("test_input.txt")
-
-    for p in p.lines:
-        print(p.strip())
