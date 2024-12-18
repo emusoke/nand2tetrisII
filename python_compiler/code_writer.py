@@ -17,8 +17,11 @@ class CodeWriter:
     def __init__(self, file):
         self.file = open(file, "w")
         index = file.index(".")
-        self.filename = file[:index]
+        #self.filename = file[:index]
         self.command_number = "0"
+        self.initialized = False
+        self._function_increment = 0
+        self._current_function = ""
 
         def _add_assembly(self):
             return (
@@ -305,7 +308,7 @@ class CodeWriter:
             )
 
     def _label_assembly(self, arg1):
-        return f"({arg1})\n"
+        return f"({self.filename[:-3]}.{self._current_function}${arg1})\n"
 
     def _goto_assembly(self, arg1):
         return (
@@ -314,14 +317,10 @@ class CodeWriter:
             + "0;JMP\n"
         )
 
-    def _function_assembly(self, arg1, arg2):
-        push_assembly = ""
-        for i in range(int(arg2)):
-            push_assembly += f"push local {i}\n"
+    def _function_name_assembly(self, arg1):
         return (
-            f"// function {arg1}\n"
-            + f"({arg1})\n"
-            + push_assembly
+            f"// function {self.filename[:-3]}.{arg1}\n"
+            + f"({self.filename[:-3]}.{arg1})\n"
         )
 
     def _return_assembly(self):
@@ -329,15 +328,15 @@ class CodeWriter:
             "// return \n"
             + "@LCL\n"  # endFrame = LCL
             + "D=M\n"
-            + "@endFrame\n"
+            + "@R13\n"
             + "M=D\n"
 
             + "// retAddr = *(endFrame - 5)\n"
             + "@5\n"  # retAddr = *(endFrame - 5)
             + "D=A\n"
-            + "@endFrame\n"
-            + "D=A-D\n"
-            + "@retAddr\n"
+            + "@R13\n"
+            + "D=M-D\n"
+            + "@R15\n"
             + "M=D\n"
 
             # pop assembly
@@ -345,37 +344,37 @@ class CodeWriter:
             + "@0"
             + "\n"
             + "D=A\n"
-            + "@ARG"
+            + "@ARG\n"
             + "D=D+M\n"
-            + "@target\n"
+            + "@R14\n"
             + "M=D\n"
             + "@SP\n"
             + "M=M-1\n"
             + "A=M\n"
             + "D=M\n"
-            + "@target\n"
+            + "@R14\n"
             + "A=M\n"
             + "M=D\n"
 
             "// SP = ARG + 1\n"
             + "@ARG\n"
-            + "D=A\n"
+            + "D=M\n"
             + "@SP\n"
             + "M=D+1\n"
 
             + "// THAT = *(endFrame - 1)\n"
-            + "@endFrame\n"
-            + "A=A-1\n"
-            + "D=A\n"
+            + "@R13\n"
+            + "A=M-1\n"
+            + "D=M\n"
             + "@THAT\n"
             + "M=D\n"
 
             + "// THIS = *(endFrame - 2)\n"
             + "@2\n"
             + "D=A\n"
-            + "@endframe\n"
-            + "A=A-D\n"
-            + "D=A\n"
+            + "@R13\n"
+            + "A=M-D\n"
+            + "D=M\n"
             + "@THIS\n"
             + "M=D\n"
 
@@ -383,9 +382,9 @@ class CodeWriter:
             + "// ARG = *(endFrame - 3)\n"
             + "@3\n"
             + "D=A\n"
-            + "@endframe\n"
-            + "A=A-D\n"
-            + "D=A\n"
+            + "@R13\n"
+            + "A=M-D\n"
+            + "D=M\n"
             + "@ARG\n"
             + "M=D\n"
 
@@ -393,14 +392,15 @@ class CodeWriter:
             + "// LCL = *(endFrame - 4)\n"
             + "@4\n"
             + "D=A\n"
-            + "@endframe\n"
-            + "A=A-D\n"
-            + "D=A\n"
+            + "@R13\n"
+            + "A=M-D\n"
+            + "D=M\n"
             + "@LCL\n"
             + "M=D\n"
 
             + "// goto retAddr\n"
-            + "@retAddr\n"
+            + "@R15\n"
+            + "A=M\n"
             + "A=M\n"
             + "0;JMP\n"
         )
@@ -466,6 +466,61 @@ class CodeWriter:
             + "M=D\n"
         )
 
+    def _save_segment(self, segment):
+        return (
+            "// save segments\n"
+            + "@"
+            + segment + "\n"
+            + "D=M\n"
+            + "@SP\n"
+            + "A=M\n"
+            + "M=D\n"
+            + "@SP\n"
+            + "M=M+1\n"
+        )
+
+    def _reposition_arg(self, n_args):
+        offset = str(5 + int(n_args))
+        return (
+            "// reposition arg\n"
+            + f"@{offset}\n"
+            + "D=A\n"
+            + "@SP\n"
+            + "D=M-D\n"
+            + "@ARG\n"
+            + "M=D\n"
+        )
+
+    def _reposition_lcl(self):
+        return (
+            "// reposition local\n"
+            + "@SP\n"
+            + "D=M\n"
+            + "@LCL\n"
+            + "M=D\n"
+        )
+
+    def _add_local_variable(self):
+        return (
+            "@SP\n"
+            + "A=M\n"
+            + "M=0\n"
+            + "@SP\n"
+            + "M=M+1\n"
+        )
+
+    def call_assembly_return_label(self, reference):
+        reference = f"{self.filename[:-3]}.{self._current_function}$ret.{self._function_increment}"
+        return (
+                f"@{reference}\n"
+                + "D=A\n"
+                + "@SP\n"
+                + "A=M\n"
+                + "M=D\n"
+                + "@SP\n"
+                + "M=M+1\n"
+                )
+
     def write_push_pop(self, command, arg1, arg2):
         if command == CommandType.PUSH:
             self.file.write(self.write_push_assembly(arg1, arg2))
@@ -482,10 +537,46 @@ class CodeWriter:
         self.file.write(self._if_goto_assembly(arg1))
 
     def write_function_assembly(self, arg1, arg2):
-        self.file.write(self._function_assembly(arg1, arg2))
+        self._current_function = arg1
+        self.file.write(self._function_name_assembly(arg1))
+        self.file.write("\n")
+        self.file.write(f"// Adding {arg2} local variables\n")
+
+        for i in range(int(arg2)):
+            self.file.write(self._add_local_variable())
 
     def write_return_assembly(self):
         self.file.write(self._return_assembly())
+
+    def set_filename(self, filename):
+        self.filename = filename
+
+    def write_call_assembly(self, arg1, arg2):
+        self.file.write(f"// call {arg1}\n")
+        self.file.write("// set return address label\n")
+        # self.file.write(self.write_push_assembly("constant", "0"))
+        reference = f"{self.filename[:-3]}.{self._current_function}$ret.{self._function_increment}"
+        self.file.write(self.call_assembly_return_label(reference))
+        self._function_increment += 1
+        self.file.write(self._save_segment("LCL"))
+        self.file.write(self._save_segment("ARG"))
+        self.file.write(self._save_segment("THIS"))
+        self.file.write(self._save_segment("THAT"))
+        self.file.write(self._reposition_arg(arg2))
+        self.file.write(self._reposition_lcl())
+        function_entry = f"{self.filename[:-3]}.{arg1}"
+        self.file.write(self._goto_assembly(function_entry))
+        self.file.write(f"({reference})\n")
+
+    def write_init(self):
+        self.file.write(
+            "// init\n"
+            + "@256\n"
+            + "D=A\n"
+            + "@SP\n"
+            + "M=D\n"
+        )
+        self.write_call_assembly("Sys.init", "0")
 
     def close(self):
         self.file.close()

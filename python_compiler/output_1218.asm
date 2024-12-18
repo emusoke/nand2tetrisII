@@ -4,9 +4,8 @@ D=A
 @SP
 M=D
 // call Sys.init
-// set return address
-// push constant 0
-@0
+// set return address label
+@nest.$ret.0
 D=A
 @SP
 A=M
@@ -57,11 +56,14 @@ M=D
 D=M
 @LCL
 M=D
-// go to Sys.init
-@Sys.init
+// go to nest.Sys.init
+@nest.Sys.init
 0;JMP
-// function Sys.init
-(Sys.init)
+(nest.$ret.0)
+// function nest.Sys.init
+(nest.Sys.init)
+
+// Adding 0 local variables
 // push constant 4000
 @4000
 D=A
@@ -107,9 +109,8 @@ D=M
 A=M
 M=D
 // call Sys.main
-// set return address
-// push constant 0
-@0
+// set return address label
+@nest.Sys.init$ret.1
 D=A
 @SP
 A=M
@@ -160,9 +161,10 @@ M=D
 D=M
 @LCL
 M=D
-// go to Sys.main
-@Sys.main
+// go to nest.Sys.main
+@nest.Sys.main
 0;JMP
+(nest.Sys.init$ret.1)
 // pop temp 1
 @1
 D=A
@@ -177,12 +179,39 @@ D=M
 @target
 A=M
 M=D
-(LOOP)
+(nest.Sys.init$LOOP)
 // go to LOOP
 @LOOP
 0;JMP
-// function Sys.main
-(Sys.main)
+// function nest.Sys.main
+(nest.Sys.main)
+
+// Adding 5 local variables
+@SP
+A=M
+M=0
+@SP
+M=M+1
+@SP
+A=M
+M=0
+@SP
+M=M+1
+@SP
+A=M
+M=0
+@SP
+M=M+1
+@SP
+A=M
+M=0
+@SP
+M=M+1
+@SP
+A=M
+M=0
+@SP
+M=M+1
 // push constant 4001
 @4001
 D=A
@@ -302,9 +331,8 @@ M=D
 @SP
 M=M+1
 // call Sys.add12
-// set return address
-// push constant 0
-@0
+// set return address label
+@nest.Sys.main$ret.2
 D=A
 @SP
 A=M
@@ -355,9 +383,10 @@ M=D
 D=M
 @LCL
 M=D
-// go to Sys.add12
-@Sys.add12
+// go to nest.Sys.add12
+@nest.Sys.add12
 0;JMP
+(nest.Sys.main$ret.2)
 // pop temp 0
 @0
 D=A
@@ -474,27 +503,27 @@ M=M+1
 // return 
 @LCL
 D=M
-@endFrame
+@R13
 M=D
 // retAddr = *(endFrame - 5)
 @5
 D=A
-@endFrame
+@R13
 D=M-D
-@retAddr
+@R15
 M=D
 // *ARG = pop()
 @0
 D=A
 @ARG
 D=D+M
-@target
+@R14
 M=D
 @SP
 M=M-1
 A=M
 D=M
-@target
+@R14
 A=M
 M=D
 // SP = ARG + 1
@@ -503,7 +532,7 @@ D=M
 @SP
 M=D+1
 // THAT = *(endFrame - 1)
-@endFrame
+@R13
 A=M-1
 D=M
 @THAT
@@ -511,7 +540,7 @@ M=D
 // THIS = *(endFrame - 2)
 @2
 D=A
-@endFrame
+@R13
 A=M-D
 D=M
 @THIS
@@ -519,7 +548,7 @@ M=D
 // ARG = *(endFrame - 3)
 @3
 D=A
-@endFrame
+@R13
 A=M-D
 D=M
 @ARG
@@ -527,17 +556,20 @@ M=D
 // LCL = *(endFrame - 4)
 @4
 D=A
-@endFrame
+@R13
 A=M-D
 D=M
 @LCL
 M=D
 // goto retAddr
-@retAddr
+@R15
+A=M
 A=M
 0;JMP
-// function Sys.add12
-(Sys.add12)
+// function nest.Sys.add12
+(nest.Sys.add12)
+
+// Adding 0 local variables
 // push constant 4002
 @4002
 D=A
@@ -615,27 +647,27 @@ M=M+1
 // return 
 @LCL
 D=M
-@endFrame
+@R13
 M=D
 // retAddr = *(endFrame - 5)
 @5
 D=A
-@endFrame
+@R13
 D=M-D
-@retAddr
+@R15
 M=D
 // *ARG = pop()
 @0
 D=A
 @ARG
 D=D+M
-@target
+@R14
 M=D
 @SP
 M=M-1
 A=M
 D=M
-@target
+@R14
 A=M
 M=D
 // SP = ARG + 1
@@ -644,7 +676,7 @@ D=M
 @SP
 M=D+1
 // THAT = *(endFrame - 1)
-@endFrame
+@R13
 A=M-1
 D=M
 @THAT
@@ -652,7 +684,7 @@ M=D
 // THIS = *(endFrame - 2)
 @2
 D=A
-@endFrame
+@R13
 A=M-D
 D=M
 @THIS
@@ -660,7 +692,7 @@ M=D
 // ARG = *(endFrame - 3)
 @3
 D=A
-@endFrame
+@R13
 A=M-D
 D=M
 @ARG
@@ -668,12 +700,13 @@ M=D
 // LCL = *(endFrame - 4)
 @4
 D=A
-@endFrame
+@R13
 A=M-D
 D=M
 @LCL
 M=D
 // goto retAddr
-@retAddr
+@R15
+A=M
 A=M
 0;JMP
