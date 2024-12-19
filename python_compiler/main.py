@@ -19,13 +19,16 @@ if __name__ == "__main__":
             if filename.endswith(".vm"):
                 files.append(os.path.join(file_name, filename))
 
-    c = CodeWriter("output_1218.asm")
-    for file_name in files:
+    c = CodeWriter("finobacci_output.asm")
+    # c = CodeWriter("nested_output.asm")
+    for file in files:
+        # get file name instead of path
+        file_name = file_name.split("/")[-1]
         c.set_filename(file_name)
         if not c.initialized:
             c.write_init()
             c.initialized = True
-        p = Parser(file_name)
+        p = Parser(file)
 
         while p.has_more_commands():
             p.advance()

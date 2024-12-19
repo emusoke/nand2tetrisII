@@ -311,6 +311,14 @@ class CodeWriter:
         return f"({self.filename[:-3]}.{self._current_function}${arg1})\n"
 
     def _goto_assembly(self, arg1):
+        go_to = f"{self.filename[:-3]}.{self._current_function}${arg1}\n"
+        return (
+            f"// go to {arg1}\n"
+            + f"@{go_to}\n"
+            + "0;JMP\n"
+        )
+
+    def _go_to_function_assembly(self, arg1):
         return (
             f"// go to {arg1}\n"
             + f"@{arg1}\n"
@@ -336,6 +344,8 @@ class CodeWriter:
             + "D=A\n"
             + "@R13\n"
             + "D=M-D\n"
+            + "A=D\n"
+            + "D=M\n"
             + "@R15\n"
             + "M=D\n"
 
@@ -400,7 +410,6 @@ class CodeWriter:
 
             + "// goto retAddr\n"
             + "@R15\n"
-            + "A=M\n"
             + "A=M\n"
             + "0;JMP\n"
         )
@@ -565,7 +574,8 @@ class CodeWriter:
         self.file.write(self._reposition_arg(arg2))
         self.file.write(self._reposition_lcl())
         function_entry = f"{self.filename[:-3]}.{arg1}"
-        self.file.write(self._goto_assembly(function_entry))
+        # print("function entry", function_entry)
+        self.file.write(self._go_to_function_assembly(function_entry))
         self.file.write(f"({reference})\n")
 
     def write_init(self):
